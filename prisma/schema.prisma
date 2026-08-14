@@ -1,0 +1,251 @@
+// Prisma schema for the Kenya-rooted 4C Hair & Locs platform.
+//
+// This is the MVP data model described in the project brief (section 21):
+// Admin/User, Product, ProductCategory, BlogPost, BlogCategory, Tag,
+// Order, OrderItem, NewsletterSubscriber.
+//
+// Notes:
+// - Product supports both DIRECT (we sell it) and AFFILIATE (we recommend
+//   it and link out) items, per section 14.
+// - Pricing on OrderItem is a snapshot taken server-side at checkout time;
+//   the browser never dictates price (section 23).
+// - Relations between content and commerce (BlogPost <-> Product) are what
+//   power the "tools used in this guide" pattern from section 13.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  // Prisma ORM 7 defaults to the Rust-free query compiler, which requires
+  // an explicit driver adapter (see src/lib/db.ts). No native engine
+  // binary is downloaded or shipped.
+}
+
+datasource db {
+  provider = "postgresql"
+  // As of Prisma ORM 7, the connection URL is no longer set here — it
+  // lives in prisma.config.ts (for the CLI) and is passed to the driver
+  // adapter in src/lib/db.ts (at runtime).
+}
+
+// ---------------------------------------------------------------------
+// Admin
+// ---------------------------------------------------------------------
+
+/// A person who can manage products and articles from the admin area.
+/// Authentication itself is intentionally out of scope for this scaffold
+/// (see section 22 / step 1 instructions) — this model just reserves the
+/// shape so an auth layer can be added without a schema rework.
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  blogPosts BlogPost[]
+
+  @@map("admin_users")
+}
+
+// ---------------------------------------------------------------------
+// Commerce
+// ---------------------------------------------------------------------
+
+enum ProductType {
+  DIRECT
+  AFFILIATE
+}
+
+/// A shop category, e.g. "4C Tools", "Loc Tools", "Accessories",
+/// "Oils & Treatments", "Wash Day" (section 9).
+model ProductCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+
+  @@map("product_categories")
+}
+
+/// A single product, sold directly or recommended via affiliate link.
+/// Every product should map to a real problem it solves (section 10) —
+/// `problemSolved` exists to keep that intentional rather than optional.
+model Product {
+  id       String      @id @default(cuid())
+  name     String
+  slug     String      @unique
+  type     ProductType @default(DIRECT)
+  featured Boolean     @default(false)
+
+  // What/why (section 11)
+  problemSolved String
+  description   String
+  intendedUse   String?
+  limitations   String?
+  suitableFor   String[] // e.g. ["4C hair", "locs", "starter locs"]
+
+  // Pricing & inventory. For AFFILIATE products, price/inventory may be
+  // informational only since the retailer controls the real transaction.
+  priceCents Int?
+  currency   String  @default("USD")
+  sku        String? @unique
+  inventory  Int?
+
+  // Media & structured spec data.
+  images         String[]
+  specifications Json?
+
+  // Affiliate-specific fields (section 14). `affiliateDisclosure` should
+  // always render on the storefront for AFFILIATE products.
+  affiliateUrl         String?
+  affiliateDisclosure  String? @default("This is an affiliate link. We may earn a commission at no extra cost to you.")
+
+  categoryId String
+  category   ProductCategory @relation(fields: [categoryId], references: [id])
+
+  tags            Tag[]
+  relatedArticles BlogPost[]
+  relatedTo       Product[] @relation("RelatedProducts")
+  relatedFrom     Product[] @relation("RelatedProducts")
+
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@map("products")
+}
+
+// ---------------------------------------------------------------------
+// Content
+// ---------------------------------------------------------------------
+
+/// Editorial section for an article, e.g. "4C", "Locs", "Products", "Roots".
+model BlogCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts BlogPost[]
+
+  @@map("blog_categories")
+}
+
+/// A guide/article. `relatedProducts` is what lets an article surface a
+/// "Tools used in this guide" block (section 13).
+model BlogPost {
+  id      String  @id @default(cuid())
+  title   String
+  slug    String  @unique
+  excerpt String
+  body    String
+  featured Boolean @default(false)
+
+  featuredImage String?
+
+  seoTitle       String?
+  seoDescription String?
+
+  authorId String?
+  author   AdminUser? @relation(fields: [authorId], references: [id])
+
+  categoryId String
+  category   BlogCategory @relation(fields: [categoryId], references: [id])
+
+  tags            Tag[]
+  relatedProducts Product[]
+
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([categoryId])
+  @@map("blog_posts")
+}
+
+/// Shared tag vocabulary across products and articles (e.g. "detangling",
+/// "starter-locs", "scalp-care") so both can be cross-linked by topic.
+model Tag {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  products  Product[]
+  blogPosts BlogPost[]
+
+  @@map("tags")
+}
+
+// ---------------------------------------------------------------------
+// Orders
+// ---------------------------------------------------------------------
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FULFILLED
+  CANCELLED
+}
+
+/// A real (non-simulated) cart-to-order record. No payment integration
+/// exists yet — orders are created once a payment provider is wired up,
+/// per section 15 ("stop at an appropriate checkout boundary").
+model Order {
+  id     String      @id @default(cuid())
+  status OrderStatus @default(PENDING)
+
+  customerEmail String
+  customerName  String?
+
+  shippingAddress Json?
+
+  subtotalCents Int
+  totalCents    Int
+  currency      String @default("USD")
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("orders")
+}
+
+/// A line item on an order. `unitPriceCents` is a server-side snapshot
+/// taken at checkout time — never trust a price sent from the browser.
+model OrderItem {
+  id             String @id @default(cuid())
+  orderId        String
+  order          Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product @relation(fields: [productId], references: [id])
+  quantity       Int
+  unitPriceCents Int
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ---------------------------------------------------------------------
+// Newsletter
+// ---------------------------------------------------------------------
+
+model NewsletterSubscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  subscribedAt DateTime @default(now())
+  source       String?  // e.g. "homepage", "article:starter-locs"
+
+  @@map("newsletter_subscribers")
+}

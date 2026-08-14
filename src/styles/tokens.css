@@ -1,0 +1,115 @@
+/**
+ * DESIGN TOKENS
+ * -------------
+ * Centralized brand foundation for the Kenya-rooted 4C hair & locs
+ * platform. This is a starting foundation, not a final brand identity —
+ * expect these values to evolve as real photography, a logo, and content
+ * come together.
+ *
+ * DIRECTION — "specialist trade catalog," not "beauty-brand SaaS":
+ * a dark ink chrome (nav / hero / footer) that reads like the cover of a
+ * well-made tool catalog, wrapped around warm paper content sections for
+ * reading. Accent is aged brass (a nod to the hardware in the product
+ * line — clips, combs, applicator bottles) plus a muted oxide/rust used
+ * sparingly for the ROOTS section and secondary emphasis. Deliberately
+ * avoiding the common cream-background + orange-terracotta pairing (a
+ * frequent AI-default look), pink/purple/rose-gold beauty-brand cliches,
+ * black-and-gold "luxury," and literal green/yellow "African" styling.
+ *
+ * Tailwind v4 reads this `@theme` block and generates utility classes
+ * from it automatically (e.g. --color-ink -> `bg-ink`, `text-ink`;
+ * --font-serif -> `font-serif`; --radius-md -> `rounded-md`). Nothing
+ * here needs a tailwind.config.js.
+ *
+ * NOTE ON FONTS: next/font/google requires fetching font files from
+ * fonts.googleapis.com at build time, which this sandbox's network
+ * policy blocks. The stacks below use system fonts as a working
+ * placeholder — swap in a licensed/self-hosted serif+sans pairing (e.g.
+ * via next/font/local) for the real brand typeface without needing to
+ * touch anything outside this file.
+ */
+
+@theme {
+  /* ---- Color: dark chrome (nav / hero / footer) --------------------- */
+  --color-ink: #1e1912; /* dark surface AND default body text color on paper */
+  --color-ink-soft: #a99c8c; /* muted text on dark surface */
+  --color-line-dark: #3a3226; /* hairlines on dark surface */
+
+  /* ---- Color: paper (reading / content surfaces) --------------------- */
+  --color-paper: #f3eee2; /* page background for content sections */
+  --color-paper-raised: #fbf8f1; /* cards, raised panels on paper */
+  --color-line: #ded2be; /* hairlines, dividers, input borders on paper */
+  --color-ink-muted: #5c5148; /* secondary text on paper */
+  --color-ink-faint: #948a7d; /* placeholders, disabled text */
+  --color-ink-inverted: #f3eee2; /* text on dark surface (= paper tone) */
+
+  /* ---- Color: brand accents ------------------------------------------- */
+  /* Aged brass: primary accent for CTAs, links, key interactive moments.
+     A hardware/tool reference, not a beauty-brand color. Works on both
+     paper and dark surfaces. */
+  --color-brass: #a9782e;
+  --color-brass-hover: #8f6425;
+  --color-brass-ink: #1e1912; /* text placed on a brass-filled surface */
+
+  /* Muted oxide/rust: secondary accent, used sparingly — ROOTS section,
+     tags, small emphasis. Deliberately darker/duller than a typical
+     "terracotta" accent. */
+  --color-oxide: #8a3a22;
+  --color-oxide-hover: #742f1b;
+  --color-oxide-ink: #f3eee2;
+
+  /* ---- Color: system --------------------------------------------------- */
+  --color-success: #3f7a4e;
+  --color-warning: #a9782e;
+  --color-danger: #a63a2e;
+
+  /* ---- Typography ---------------------------------------------------- */
+  /* Serif for editorial display/headings; sans for UI, labels, and body
+     copy. See NOTE ON FONTS above. */
+  --font-serif: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype",
+    "Book Antiqua", serif;
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
+  /* Type scale — deliberately restrained; most editorial pages should
+     only need a handful of these sizes. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.4;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.6;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.5;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.3;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 1.25;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 1.15;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1.1;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1.05;
+
+  /* ---- Radius --------------------------------------------------------- */
+  /* Restrained — a trade-catalog aesthetic reads as more premium with
+     small, mostly-square edges rather than heavily rounded "app" UI. */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-full: 999px;
+
+  /* ---- Layout widths --------------------------------------------------- */
+  --spacing-content-narrow: 42rem; /* ~672px — article/prose reading column */
+  --spacing-content: 80rem; /* ~1280px — standard page container */
+  --spacing-content-wide: 90rem; /* ~1440px — full-bleed sections */
+
+  /* ---- Section rhythm --------------------------------------------------- */
+  /* Named spacing tokens for consistent vertical rhythm between
+     homepage/landing sections, used as e.g. `py-section-y`. */
+  --spacing-section-y: 5rem;
+  --spacing-section-y-sm: 3rem;
+}

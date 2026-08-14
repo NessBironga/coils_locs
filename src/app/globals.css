@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Editorial headings default to the serif display face. Components can
+   override with `font-sans` where a heading should stay in the UI font. */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-serif);
+}
