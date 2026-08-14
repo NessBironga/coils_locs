@@ -59,8 +59,8 @@ export function SiteFooter() {
 
       <div className="border-t border-line-dark px-6 py-5">
         <p className="mx-auto max-w-content text-xs text-ink-soft">
-          © {new Date().getFullYear()} STRUKS: Coils &amp; Locs. Sample project
-          content — not a live storefront.
+          © {new Date().getFullYear()} STRUKS: Coils &amp; Locs.Kenyan roots,
+          global community.
         </p>
       </div>
     </footer>
