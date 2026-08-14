@@ -1,11 +1,11 @@
 import Link from "next/link";
 
 const FOOTER_LINKS = [
-  { label: "Shop", href: "/shop" },
-  { label: "4C Hair", href: "/4c-hair" },
+  { label: "Coils & Curls", href: "/coils-curls" },
   { label: "Locs", href: "/locs" },
+  { label: "Care", href: "/care" },
+  { label: "Accessories", href: "/accessories" },
   { label: "Guides", href: "/guides" },
-  { label: "Roots", href: "/roots" },
 ];
 
 // Social accounts are acquisition channels, not a feature to rebuild in
@@ -20,10 +20,10 @@ export function SiteFooter() {
     <footer className="mt-auto bg-ink text-ink-inverted">
       <div className="mx-auto flex max-w-content flex-col gap-10 px-6 py-14 md:flex-row md:items-start md:justify-between">
         <div className="max-w-sm">
-          <p className="font-serif text-lg">Coil &amp; Root</p>
+          <p className="font-serif text-lg">STRUKS: Coils &amp; Locs</p>
           <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-            Practical hair-care knowledge and carefully chosen tools for 4C
-            hair and locs. Kenyan roots, global community.
+            Practical hair-care knowledge and carefully chosen tools for coils,
+            curls, and locs. Kenyan roots, global community.
           </p>
         </div>
 
@@ -59,7 +59,7 @@ export function SiteFooter() {
 
       <div className="border-t border-line-dark px-6 py-5">
         <p className="mx-auto max-w-content text-xs text-ink-soft">
-          © {new Date().getFullYear()} Coil &amp; Root. Sample project
+          © {new Date().getFullYear()} STRUKS: Coils &amp; Locs. Sample project
           content — not a live storefront.
         </p>
       </div>
