@@ -1,25 +1,22 @@
 import Link from "next/link";
 
-// Primary navigation per the site's information architecture. Kept short
-// and un-nested on purpose (section 6: "do not overload the navigation").
 const NAV_LINKS = [
-  { label: "Shop", href: "/shop" },
-  { label: "4C Hair", href: "/4c-hair" },
+  { label: "Coils & Curls", href: "/coils-curls" },
   { label: "Locs", href: "/locs" },
+  { label: "Care", href: "/care" },
+  { label: "Accessories", href: "/accessories" },
   { label: "Guides", href: "/guides" },
-  { label: "Roots", href: "/roots" },
 ];
 
 export function SiteHeader() {
   return (
     <header className="bg-ink text-ink-inverted border-b border-line-dark">
       <div className="mx-auto flex max-w-content items-center justify-between gap-6 px-6 py-5">
-        {/* Working wordmark placeholder — final naming/logo not decided yet. */}
         <Link
           href="/"
           className="font-serif text-xl tracking-tight whitespace-nowrap"
         >
-          Coil &amp; Root
+          STRUKS: Coils &amp; Locs
         </Link>
 
         <nav
@@ -65,11 +62,12 @@ export function SiteHeader() {
               />
             </svg>
           </button>
+
           <Link
-            href="/cart"
+            href="/"
             className="text-sm tracking-wide uppercase text-ink-soft transition-colors hover:text-ink-inverted"
           >
-            Cart
+            Explore
           </Link>
         </div>
       </div>
