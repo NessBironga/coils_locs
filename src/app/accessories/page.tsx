@@ -1,4 +1,4 @@
-﻿import { SiteHeader } from "@/components/site-header";
+import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import Link from "next/link";
 
@@ -14,16 +14,9 @@ export default function AccessoriesPage() {
           section explains scope and what STRUKS will curate.
         </p>
 
-        <section className="mt-10">
-          <h2 className="font-sans text-sm tracking-[0.16em] uppercase text-ink-muted">
-            What we’ll cover
-          </h2>
-          <ul className="mt-4 space-y-3">
-            <li className="text-ink">Protective accessories</li>
-            <li className="text-ink">Tools &amp; hardware</li>
-            <li className="text-ink">Decorative accents</li>
-          </ul>
-        </section>
+        <div className="mt-8">
+          <Link href="/shop?category=Protective+Accessories" className="inline-block rounded-sm bg-brass px-4 py-2 text-sm font-medium text-brass-ink">Shop Accessories →</Link>
+        </div>
       </main>
       <SiteFooter />
     </>
