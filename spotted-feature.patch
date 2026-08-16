@@ -1,0 +1,551 @@
+diff --git a/src/app/spotted/[slug]/page.tsx b/src/app/spotted/[slug]/page.tsx
+new file mode 100644
+index 0000000..8a6b286
+--- /dev/null
++++ b/src/app/spotted/[slug]/page.tsx
+@@ -0,0 +1,144 @@
++import type { Metadata } from "next";
++import Link from "next/link";
++import { notFound } from "next/navigation";
++import { SiteHeader } from "@/components/site-header";
++import { SiteFooter } from "@/components/site-footer";
++import { SpottedPhotoPlaceholder } from "@/components/spotted-photo-placeholder";
++import { getSpottedEntry, spottedEntries } from "@/data/spotted";
++
++type SpottedEntryPageProps = {
++  params: Promise<{ slug: string }>;
++};
++
++export function generateStaticParams() {
++  return spottedEntries.map((entry) => ({ slug: entry.slug }));
++}
++
++export async function generateMetadata({
++  params,
++}: SpottedEntryPageProps): Promise<Metadata> {
++  const { slug } = await params;
++  const entry = getSpottedEntry(slug);
++  if (!entry) return { title: "SPOTTED" };
++
++  const displayName = entry.anonymous
++    ? "Anonymous"
++    : entry.participantName ?? "Anonymous";
++
++  return {
++    title: `Spotted / ${String(entry.number).padStart(3, "0")} — ${displayName}`,
++    description: entry.hairAnswer,
++  };
++}
++
++export default async function SpottedEntryPage({
++  params,
++}: SpottedEntryPageProps) {
++  const { slug } = await params;
++  const entry = getSpottedEntry(slug);
++
++  if (!entry) {
++    notFound();
++  }
++
++  const displayName = entry.anonymous
++    ? "Anonymous"
++    : entry.participantName ?? "Anonymous";
++
++  return (
++    <>
++      <SiteHeader />
++      <main className="flex-1 bg-paper">
++        <div className="mx-auto max-w-content px-6 py-16">
++          <Link
++            href="/spotted"
++            className="text-sm text-ink-muted transition-colors hover:text-brass focus:outline-none focus:ring-2 focus:ring-brass/60"
++          >
++            ← Back to SPOTTED
++          </Link>
++
++          <div className="mt-6 grid gap-10 md:grid-cols-2 md:gap-14">
++            <SpottedPhotoPlaceholder
++              caption={entry.imageCaption}
++              photographHairOnly={entry.photographHairOnly}
++              className="h-96 w-full md:h-full"
++            />
++
++            <div>
++              <p className="text-xs uppercase tracking-widest text-ink-muted">
++                Spotted / {String(entry.number).padStart(3, "0")}
++                {entry.isPlaceholder && (
++                  <span className="ml-2 text-oxide">
++                    Sample entry — not a real participant
++                  </span>
++                )}
++              </p>
++
++              <h1 className="mt-3 font-serif text-3xl text-ink md:text-4xl">
++                {displayName}
++              </h1>
++
++              <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm text-ink-muted">
++                {entry.location && (
++                  <div className="flex gap-1.5">
++                    <dt className="font-medium text-ink">Location:</dt>
++                    <dd>{entry.location}</dd>
++                  </div>
++                )}
++                {entry.hairType && (
++                  <div className="flex gap-1.5">
++                    <dt className="font-medium text-ink">Hair:</dt>
++                    <dd>{entry.hairType}</dd>
++                  </div>
++                )}
++                {entry.hairJourney && (
++                  <div className="flex gap-1.5">
++                    <dt className="font-medium text-ink">Years:</dt>
++                    <dd>{entry.hairJourney}</dd>
++                  </div>
++                )}
++              </dl>
++
++              <section className="mt-8" aria-labelledby="hair-note-heading">
++                <h2
++                  id="hair-note-heading"
++                  className="text-xs uppercase tracking-widest text-ink-muted"
++                >
++                  Hair note
++                </h2>
++                <p className="mt-2 text-sm italic text-ink-muted">
++                  &ldquo;{entry.hairQuestion}&rdquo;
++                </p>
++                <blockquote className="mt-3 border-l-2 border-brass pl-4 font-serif text-xl leading-snug text-ink">
++                  {entry.hairAnswer}
++                </blockquote>
++              </section>
++
++              <section className="mt-8" aria-labelledby="life-note-heading">
++                <h2
++                  id="life-note-heading"
++                  className="text-xs uppercase tracking-widest text-ink-muted"
++                >
++                  Life note
++                </h2>
++                <p className="mt-2 text-sm italic text-ink-muted">
++                  &ldquo;{entry.lifeQuestion}&rdquo;
++                </p>
++                <blockquote className="mt-3 border-l-2 border-brass pl-4 font-serif text-xl leading-snug text-ink">
++                  {entry.lifeAnswer}
++                </blockquote>
++              </section>
++
++              {entry.editorialNote && (
++                <p className="mt-8 border-t border-line pt-6 text-sm text-ink-muted">
++                  {entry.editorialNote}
++                </p>
++              )}
++            </div>
++          </div>
++        </div>
++      </main>
++      <SiteFooter />
++    </>
++  );
++}
+diff --git a/src/app/spotted/page.tsx b/src/app/spotted/page.tsx
+new file mode 100644
+index 0000000..4c85d08
+--- /dev/null
++++ b/src/app/spotted/page.tsx
+@@ -0,0 +1,95 @@
++import Link from "next/link";
++import { SiteHeader } from "@/components/site-header";
++import { SiteFooter } from "@/components/site-footer";
++import { SpottedCard } from "@/components/spotted-card";
++import { SPOTTED_CATEGORIES, spottedEntries } from "@/data/spotted";
++
++export const metadata = {
++  title: "SPOTTED",
++  description:
++    "SPOTTED is STRUKS's collection of conversations with people we meet along the way — about their hair, what they've learned, and what they know beyond it.",
++};
++
++type SpottedPageProps = {
++  searchParams: Promise<{ category?: string }>;
++};
++
++export default async function SpottedPage({ searchParams }: SpottedPageProps) {
++  const { category } = await searchParams;
++  const activeCategory = SPOTTED_CATEGORIES.find((c) => c === category);
++
++  const entries = activeCategory
++    ? spottedEntries.filter((entry) => entry.category === activeCategory)
++    : spottedEntries;
++
++  return (
++    <>
++      <SiteHeader />
++      <main className="flex-1 bg-paper">
++        <div className="mx-auto max-w-content px-6 py-16">
++          <h1 className="font-serif text-3xl md:text-4xl">SPOTTED</h1>
++
++          <div className="mt-4 max-w-prose space-y-3 text-lg text-ink-soft">
++            <p>
++              <strong className="text-ink">
++                We notice good hair. We ask questions.
++              </strong>
++            </p>
++            <p>
++              SPOTTED is STRUKS&rsquo;s collection of conversations with
++              people we meet along the way — about their hair, what
++              they&rsquo;ve learned, and what they know beyond it.
++            </p>
++          </div>
++
++          <nav
++            aria-label="Filter SPOTTED by category"
++            className="mt-8 flex flex-wrap gap-3"
++          >
++            <Link
++              href="/spotted"
++              aria-current={!activeCategory ? "page" : undefined}
++              className={`inline-block rounded-full border px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brass/60 ${
++                !activeCategory
++                  ? "border-brass bg-brass text-brass-ink"
++                  : "border-line bg-paper-raised text-ink hover:border-brass hover:text-brass"
++              }`}
++            >
++              All
++            </Link>
++            {SPOTTED_CATEGORIES.map((cat) => {
++              const isActive = cat === activeCategory;
++              return (
++                <Link
++                  key={cat}
++                  href={`/spotted?category=${encodeURIComponent(cat)}`}
++                  aria-current={isActive ? "page" : undefined}
++                  className={`inline-block rounded-full border px-4 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-brass/60 ${
++                    isActive
++                      ? "border-brass bg-brass text-brass-ink"
++                      : "border-line bg-paper-raised text-ink hover:border-brass hover:text-brass"
++                  }`}
++                >
++                  {cat}
++                </Link>
++              );
++            })}
++          </nav>
++
++          {entries.length > 0 ? (
++            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
++              {entries.map((entry) => (
++                <SpottedCard key={entry.slug} entry={entry} />
++              ))}
++            </div>
++          ) : (
++            <p className="mt-10 text-ink-muted">
++              No SPOTTED entries in this category yet — check back soon.
++            </p>
++          )}
++        </div>
++      </main>
++      <SiteFooter />
++    </>
++  );
++}
+diff --git a/src/components/spotted-card.tsx b/src/components/spotted-card.tsx
+new file mode 100644
+index 0000000..aa0d5c3
+--- /dev/null
++++ b/src/components/spotted-card.tsx
+@@ -0,0 +1,38 @@
++import Link from "next/link";
++import type { SpottedEntry } from "@/data/spotted";
++import { SpottedPhotoPlaceholder } from "@/components/spotted-photo-placeholder";
++
++export function SpottedCard({ entry }: { entry: SpottedEntry }) {
++  const displayName = entry.anonymous
++    ? "Anonymous"
++    : entry.participantName ?? "Anonymous";
++
++  return (
++    <Link
++      href={`/spotted/${entry.slug}`}
++      className="group block border border-line bg-paper-raised transition-colors hover:border-brass focus:outline-none focus:ring-2 focus:ring-brass/60"
++    >
++      <SpottedPhotoPlaceholder
++        caption={entry.imageCaption}
++        photographHairOnly={entry.photographHairOnly}
++        className="h-56 w-full"
++      />
++      <div className="p-5">
++        <p className="text-xs uppercase tracking-widest text-ink-muted">
++          Spotted / {String(entry.number).padStart(3, "0")}
++          {entry.isPlaceholder && (
++            <span className="ml-2 text-oxide">Sample entry</span>
++          )}
++        </p>
++        <p className="mt-2 font-serif text-lg text-ink">
++          {entry.category}
++          {entry.location ? ` — ${entry.location}` : ""}
++        </p>
++        <p className="mt-2 text-sm text-ink-muted">{displayName}</p>
++        <span className="mt-4 inline-block text-sm text-brass transition-transform group-hover:translate-x-1">
++          Read more →
++        </span>
++      </div>
++    </Link>
++  );
++}
+diff --git a/src/components/spotted-photo-placeholder.tsx b/src/components/spotted-photo-placeholder.tsx
+new file mode 100644
+index 0000000..e4ed93b
+--- /dev/null
++++ b/src/components/spotted-photo-placeholder.tsx
+@@ -0,0 +1,44 @@
++type SpottedPhotoPlaceholderProps = {
++  caption: string;
++  photographHairOnly: boolean;
++  className?: string;
++};
++
++/**
++ * Stand-in for a real SPOTTED photograph.
++ *
++ * SPOTTED is built around authentic, consented photography of real
++ * people's hair — not stock photos, and never AI-generated people. Since
++ * no real photographs exist yet, every image slot uses this graphic
++ * placeholder (a `role="img"` block with a descriptive label, not a
++ * fake <img>) so nothing here could be mistaken for a real participant.
++ */
++export function SpottedPhotoPlaceholder({
++  caption,
++  photographHairOnly,
++  className = "",
++}: SpottedPhotoPlaceholderProps) {
++  const label = `Photography placeholder: ${caption}${
++    photographHairOnly ? " (hair only, no face shown)" : ""
++  }. Pending a real photograph.`;
++
++  return (
++    <div
++      role="img"
++      aria-label={label}
++      className={`relative overflow-hidden bg-ink ${className}`}
++    >
++      <div
++        className="absolute inset-0 opacity-80"
++        style={{
++          backgroundImage:
++            "repeating-linear-gradient(45deg, #2a2419 0px, #2a2419 1px, transparent 1px, transparent 14px)",
++        }}
++        aria-hidden="true"
++      />
++      <div className="absolute bottom-0 left-0 right-0 border-t border-line-dark px-4 py-3 text-xs uppercase tracking-widest text-ink-soft">
++        <span>{caption}</span>
++      </div>
++    </div>
++  );
++}
+diff --git a/src/data/spotted.ts b/src/data/spotted.ts
+new file mode 100644
+index 0000000..f8fc1ca
+--- /dev/null
++++ b/src/data/spotted.ts
+@@ -0,0 +1,130 @@
++// Content model + data for SPOTTED — STRUKS's editorial series
++// documenting real hair journeys and the people behind them.
++//
++// This follows the same pattern as src/data/products.ts: a typed data
++// file rather than a database table, since the rest of the app doesn't
++// have Prisma wired up yet (see src/lib/db.ts).
++//
++// IMPORTANT: no real participant stories or photographs exist yet. Every
++// entry below is placeholder content, explicitly flagged via
++// `isPlaceholder`, so it can never be mistaken for a real contribution.
++// Replace/remove placeholders as real SPOTTED entries are collected.
++
++export type SpottedCategory =
++  | "Locs"
++  | "Coils"
++  | "Curls"
++  | "Protective Styles"
++  | "Other";
++
++export const SPOTTED_CATEGORIES: SpottedCategory[] = [
++  "Locs",
++  "Coils",
++  "Curls",
++  "Protective Styles",
++  "Other",
++];
++
++export type SpottedEntry = {
++  /** Sequential SPOTTED number, shown as e.g. "SPOTTED / 001". */
++  number: number;
++  slug: string;
++  category: SpottedCategory;
++
++  /** Set anonymous=true and omit participantName to publish without a name. */
++  participantName?: string;
++  anonymous: boolean;
++
++  location?: string;
++  /** Free-text descriptive metadata, e.g. "4C / natural", "Locs". */
++  hairType?: string;
++  /** Free-text, e.g. "4 years", "Since 2021" — optional, omit if unknown. */
++  hairJourney?: string;
++
++  /** Caption used on the photography placeholder until a real photo exists. */
++  imageCaption: string;
++  /** If true, the participant chose to have only their hair photographed. */
++  photographHairOnly: boolean;
++
++  hairQuestion: string;
++  hairAnswer: string;
++  lifeQuestion: string;
++  lifeAnswer: string;
++
++  /** Optional short editorial note from the STRUKS contributor. */
++  editorialNote?: string;
++
++  // --- Consent fields. Never rendered on the public site — see
++  // src/app/spotted/page.tsx and [slug]/page.tsx, which intentionally
++  // never read these two fields when building UI copy. They exist here
++  // so the data model is consent-aware from day one. ---
++  consentToPublish: boolean;
++  consentToSocial: boolean;
++
++  /** True while this is placeholder/sample content, not a real entry. */
++  isPlaceholder: boolean;
++};
++
++export const HAIR_QUESTION = "What's one thing you wish you knew?";
++export const LIFE_QUESTION = "What's one piece of advice you'd give anyone right now?";
++
++export const spottedEntries: SpottedEntry[] = [
++  {
++    number: 1,
++    slug: "001-nairobi-locs",
++    category: "Locs",
++    anonymous: false,
++    participantName: "M.",
++    location: "Nairobi",
++    hairType: "Locs",
++    hairJourney: "4 years",
++    imageCaption: "Detail shot, back of head — locs",
++    photographHairOnly: true,
++    hairQuestion: "What's one thing you wish you knew before starting locs?",
++    hairAnswer: "Don't retwist every time you think they look messy.",
++    lifeQuestion: LIFE_QUESTION,
++    lifeAnswer: "Stop rushing things that are supposed to take time.",
++    consentToPublish: true,
++    consentToSocial: false,
++    isPlaceholder: true,
++  },
++  {
++    number: 2,
++    slug: "002-mombasa-coils",
++    category: "Coils",
++    anonymous: true,
++    location: "Mombasa",
++    hairType: "4C / natural",
++    imageCaption: "Detail shot — coily texture, natural light",
++    photographHairOnly: true,
++    hairQuestion: "What's one thing you wish you knew about your coils?",
++    hairAnswer: "Placeholder answer — pending a real SPOTTED conversation.",
++    lifeQuestion: LIFE_QUESTION,
++    lifeAnswer: "Placeholder answer — pending a real SPOTTED conversation.",
++    consentToPublish: true,
++    consentToSocial: true,
++    isPlaceholder: true,
++  },
++  {
++    number: 3,
++    slug: "003-nakuru-protective-style",
++    category: "Protective Styles",
++    anonymous: false,
++    participantName: "A. Wanjiru",
++    location: "Nakuru",
++    hairType: "Box braids on natural hair",
++    imageCaption: "Full-length shot — protective style",
++    photographHairOnly: false,
++    hairQuestion: "What's one thing you wish you knew about protective styling?",
++    hairAnswer: "Placeholder answer — pending a real SPOTTED conversation.",
++    lifeQuestion: LIFE_QUESTION,
++    lifeAnswer: "Placeholder answer — pending a real SPOTTED conversation.",
++    consentToPublish: true,
++    consentToSocial: true,
++    isPlaceholder: true,
++  },
++];
++
++export function getSpottedEntry(slug: string) {
++  return spottedEntries.find((entry) => entry.slug === slug);
++}
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 5f01aaf..fed04e1 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -1,6 +1,8 @@
+ import Link from "next/link";
+ import { SiteFooter } from "@/components/site-footer";
+ import { SiteHeader } from "@/components/site-header";
++import { SpottedCard } from "@/components/spotted-card";
++import { spottedEntries } from "@/data/spotted";
+ 
+ const CATEGORIES = [
+   { label: "Coils & Curls", href: "/coils-curls" },
+@@ -102,6 +104,32 @@ export default function Home() {
+             </div>
+           </div>
+         </section>
++        <section className="border-t border-line py-section-y-sm">
++          <div className="mx-auto max-w-content px-6">
++            <div className="flex flex-wrap items-baseline justify-between gap-3">
++              <div>
++                <h2 className="font-sans text-xs tracking-[0.2em] text-ink-muted uppercase">
++                  Spotted
++                </h2>
++                <p className="mt-2 font-serif text-xl text-ink">
++                  People we noticed. Things they know.
++                </p>
++              </div>
++              <Link
++                href="/spotted"
++                className="text-sm text-brass transition-transform hover:translate-x-1 focus:outline-none focus:ring-2 focus:ring-brass/60"
++              >
++                View all SPOTTED →
++              </Link>
++            </div>
++
++            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
++              {spottedEntries.slice(0, 3).map((entry) => (
++                <SpottedCard key={entry.slug} entry={entry} />
++              ))}
++            </div>
++          </div>
++        </section>
+       </main>
+ 
+       <SiteFooter />
+diff --git a/src/components/site-footer.tsx b/src/components/site-footer.tsx
+index 6b0961c..86ab613 100644
+--- a/src/components/site-footer.tsx
++++ b/src/components/site-footer.tsx
+@@ -6,6 +6,7 @@ const FOOTER_LINKS = [
+   { label: "Care", href: "/care" },
+   { label: "Accessories", href: "/accessories" },
+   { label: "Guides", href: "/guides" },
++  { label: "Spotted", href: "/spotted" },
+ ];
+ 
+ // Social accounts are acquisition channels, not a feature to rebuild in
+diff --git a/src/components/site-header.tsx b/src/components/site-header.tsx
+index bcfbd90..decd25a 100644
+--- a/src/components/site-header.tsx
++++ b/src/components/site-header.tsx
+@@ -10,6 +10,7 @@ const NAV_LINKS = [
+   { label: "Locs", href: "/locs" },
+   { label: "Care", href: "/care" },
+   { label: "Guides", href: "/guides" },
++  { label: "Spotted", href: "/spotted" },
+   { label: "Shop", href: "/shop" },
+ ];
+ 
